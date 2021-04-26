@@ -49,9 +49,12 @@ int turnUpFaceCount        = 0;
 int turnDownFaceCount      = 0;
 
 enum { Left = -1, Right = 1 };
-int direction = Right;
+int direction             = Right;
 bool cubeChangedDirection = false;
 
+int randomization_count = 0;
+int randomization_limit = rand() % 50 + 10;
+bool firstTime = true;
 
 // Vertices of a unit cube centered at origin, sides aligned with axes
 point4 vertices1[8] = {
@@ -341,6 +344,7 @@ void rightBackTurn();
 void downTurn();
 void leftTurn();
 void leftBackTurn();
+void shuffle();
 
 void
 display( void )
@@ -351,6 +355,10 @@ display( void )
     
     // Scale(), Translate(), RotateX(), RotateY(), RotateZ(): user-defined functions in mat.h
     //use this to have rotation around fixed axes
+    if (randomization_count < randomization_limit && !blockOtherTurns && !firstTime)
+    {
+        shuffle();
+    }
     
     if (turnUpFace)
     {
@@ -384,7 +392,7 @@ display( void )
         glDrawArrays( GL_TRIANGLES, 0, NumVertices );
     }
     glutSwapBuffers();
-
+    firstTime = false;
 }
 
 //---------------------------------------------------------------------
@@ -443,6 +451,10 @@ keyboard( unsigned char key,int x, int y )
     else if((key == 'C' | key == 'c') && !blockOtherTurns)
     {
         direction *= -1;
+    }
+    else if((key == 'I' | key == 'i') && !blockOtherTurns)
+    {
+        randomization_count = 0;
     }
     else if((key == 'W' | key == 'w') && !blockOtherTurns)
     {
@@ -849,6 +861,32 @@ void shiftRightBackTurn()
     downFaceCubes[0] = rightFaceBackCubes[3];
 }
 
+void shuffle()
+{
+    if(!blockOtherTurns)
+    {
+        int randomChoice = rand() % 4;
+        
+        switch(randomChoice)
+        {
+            case 0:
+                turnUpFace = true;
+                break;
+            case 1:
+                turnLeftFace = true;
+                break;
+            case 2:
+                turnDownFace = true;
+                break;
+            case 3:
+                turnRightFace = true;
+                break;
+        }
+        blockOtherTurns = true;
+        randomization_count++;
+    }
+}
+
 //----------------------------------------------------------------------------
 
 void mouse( int button, int state, int x, int y )
@@ -867,7 +905,7 @@ void print_helper()
     std::cout << "------------------------------" << std::endl;
     std::cout << "Q/q : Quit" << std::endl;
     std::cout << "H/h : Helper" << std::endl;
-    std::cout << "I/i : Initialize" << std::endl;
+    std::cout << "I/i : Initialize/Shuffle" << std::endl;
     std::cout << "------------------------------" << std::endl;
     std::cout << "Use Keys to rotate the faces" << std::endl;
     std::cout << "W/w : Turn upper face" << std::endl;
@@ -876,8 +914,12 @@ void print_helper()
     std::cout << "D/d : Turn right face" << std::endl;
     std::cout << "C/c : Change turning direction" << std::endl;
     std::cout << "------------------------------" << std::endl;
-    
-
+    std::cout << "Use arrow keys to rotate the whole cube" << std::endl;
+    std::cout << "< : Turn to left" << std::endl;
+    std::cout << "> : Turn to right" << std::endl;
+    std::cout << "^ : Turn to up" << std::endl;
+    std::cout << "v : Turn to down" << std::endl;
+    std::cout << "------------------------------" << std::endl;
 }
 
 
@@ -902,7 +944,7 @@ main( int argc, char **argv )
     glutInit( &argc, argv );
     glutInitDisplayMode(  GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_3_2_CORE_PROFILE);
     glutInitWindowSize( 512, 512 );
-    glutCreateWindow( "Color Cube" );
+    glutCreateWindow( "Rubic Cube" );
     
     glewExperimental = GL_TRUE;
     glewInit();
